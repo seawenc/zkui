@@ -88,19 +88,32 @@ public enum ServletUtil {
 
     }
 
+
+
     public ZooKeeper getZookeeper(HttpServletRequest request, HttpServletResponse response, String zkServer, Properties globalProps) {
         try {
 
             HttpSession session = request.getSession();
             ZooKeeper zk = (ZooKeeper) session.getAttribute("zk");
+
             if (zk == null || zk.getState() != ZooKeeper.States.CONNECTED) {
                 Integer zkSessionTimeout = Integer.parseInt(globalProps.getProperty("zkSessionTimeout"));
                 //Converting seconds to ms.
                 zkSessionTimeout = zkSessionTimeout * 1000;
                 zk = ZooKeeperUtil.INSTANCE.createZKConnection(zkServer, zkSessionTimeout);
+                ZooKeeperUtil.INSTANCE.addAuthInfo(zk,globalProps.getProperty("authInfo"));
                 ZooKeeperUtil.INSTANCE.setDefaultAcl(globalProps.getProperty("defaultAcl"));
+                for (int i = 0; i < 10; i++) {
+                    Thread.sleep(1000);
+                    ZooKeeper.States state = zk.getState();
+                    if(state == ZooKeeper.States.CONNECTED){
+                        break;
+                    }
+                    logger.warn("等待zk连接成功...,当前状态："+state.toString());
+                }
                 if (zk.getState() != ZooKeeper.States.CONNECTED) {
-                    session.setAttribute("zk", null);
+                    throw new RuntimeException("zk连接不成功!(已重试10次)");
+
                 } else {
                     session.setAttribute("zk", zk);
                 }

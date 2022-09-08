@@ -1,6 +1,6 @@
 FROM java:8
 
-MAINTAINER Miguel Garcia Puyol <miguelpuyol@gmail.com>
+MAINTAINER Miguel Garcia Puyol <chengsheng@travelsky.com.cn>
 
 WORKDIR /var/app
 

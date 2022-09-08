@@ -17,6 +17,7 @@
  */
 package com.deem.zkui.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.deem.zkui.vo.LeafBean;
 import com.deem.zkui.vo.ZKNode;
 import java.io.IOException;
@@ -79,6 +80,24 @@ public enum ZooKeeperUtil {
 
     private ArrayList<ACL> defaultAcl() {
         return defaultAcl;
+    }
+
+    public void addAuthInfo(ZooKeeper zooKeeper, String jsonAuthInfo) {
+        if (jsonAuthInfo == null || jsonAuthInfo.trim().length() == 0) {
+            return;
+        } else {
+            try {
+                com.alibaba.fastjson.JSONObject authInfo = JSON.parseObject(jsonAuthInfo);
+                String scheme = authInfo.getString("scheme");
+                String auth = authInfo.getString("auth");
+                if (auth == null || auth.trim().length() == 0) {
+                    throw new RuntimeException();
+                }
+                zooKeeper.addAuthInfo(scheme, auth.getBytes());
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to parse auth info " + jsonAuthInfo, e);
+            }
+        }
     }
 
     public void setDefaultAcl(String jsonAcl) {
